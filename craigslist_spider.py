@@ -4,6 +4,7 @@ import re
 class CraiglistSpider(scrapy.Spider):
     name = 'CraiglistSpider'
     start_urls = ['https://geo.craigslist.org/iso/us/']
+    allowed_domains = ['craigslist.org']
 
     def parse(self, response):
         craiglist_locations = []
@@ -21,8 +22,17 @@ class CraiglistSpider(scrapy.Spider):
                         place = location.xpath('a/b/text()').extract()[0]
                     craiglist_locations.append({'place': place, 'url': location_link})
 
+                    if location_link.lower() != "//www.craigslist.org/about/terms.of.use":
+                        yield scrapy.Request(location_link, callback=self.parse_location)
+
+        # print all the locations that we found
         for location in craiglist_locations:
             print location
+
+    def parse_location(self, response):
+        print "In the location craiglist page"
+        self.logger.info("Visited %s", response.url)
+
 
         # Now that we have our craiglist locations with place and link, loop through them
         # for location in craiglist_locations:
