@@ -1,6 +1,9 @@
 import scrapy
 import re
 
+# CONSTANTS
+real_estate_route = '/d/real-estate/search/rea'
+
 class CraiglistSpider(scrapy.Spider):
     name = 'CraiglistSpider'
     start_urls = ['https://geo.craigslist.org/iso/us/']
@@ -23,15 +26,29 @@ class CraiglistSpider(scrapy.Spider):
                     craiglist_locations.append({'place': place, 'url': location_link})
 
                     if location_link.lower() != "//www.craigslist.org/about/terms.of.use":
-                        yield scrapy.Request(location_link, callback=self.parse_location)
+                        real_estate_sold_link = location_link + real_estate_route
+                        yield scrapy.Request(real_estate_sold_link, callback=self.parse_location)
 
         # print all the locations that we found
         for location in craiglist_locations:
             print location
 
     def parse_location(self, response):
-        print "In the location craiglist page"
-        self.logger.info("Visited %s", response.url)
+        self.logger.info("Visiting %s", response.url)
+        # Go through each of the housing
+        for house_for_sale in response.css('.result-row'):
+            house_for_sale_link = house_for_sale.css( 'a::attr(href)' ).extract_first()
+            self.logger.info( "House for sale link: %s", house_for_sale_link )
+
+        # If there is a next page, go to the next page
+        for next_page in response.css('.next'):
+            next_page_route = next_page.css('a::attr(href)').extract()[0]
+            next_page_link = response.url.replace( real_estate_route, next_page_route )
+            if next_page_route != None and len( next_page_route ) > 0:
+                self.logger.info( 'Visiting the next page with: %s', next_page_link )
+                yield scrapy.Request( next_page_link, callback=self.parse_location )
+
+        # Now go through each of the 'result-row' and visit them
 
 
         # Now that we have our craiglist locations with place and link, loop through them
