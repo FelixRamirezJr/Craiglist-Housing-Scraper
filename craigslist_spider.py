@@ -1,8 +1,12 @@
 import scrapy
 import re
+from scrapy.http import FormRequest
+import requests
+
 
 # CONSTANTS
 real_estate_route = '/d/real-estate/search/rea'
+send_data_url = "https://frj-investments.herokuapp.com/api/potential_investments"
 
 # shared-line-bubble order of information
 bedrooms_and_bath_index = 0
@@ -61,8 +65,7 @@ class CraiglistSpider(scrapy.Spider):
 
     # Method for a specific post of real estate
     def parse_investment(self, response):
-        data = {'rooms': '', 'bathrooms': '', 'price': '', 'link': '', 'location': response.meta['place']}
-        #self.logger.info("parse_investment: %s -- at the location: %s", response.url, response.meta['place'])
+        data = {'rooms': '', 'bathrooms': '', 'price': '', 'url': response.url, 'location': response.meta['place']}
         # Get the price
         for price in response.css('.price'):
             data['price'] = price.xpath('text()').extract()[0]
@@ -75,6 +78,11 @@ class CraiglistSpider(scrapy.Spider):
 
         # Now that we have the data, send it to the server
         if not(len(data['rooms'] ) == 0 or len( data['bathrooms'] ) == 0):
+            data['price'] = data['price'].replace('$','')
+            data['rooms'] = data['rooms'].replace('BR', '')
+            data['bathrooms'] = data['bathrooms'].replace('Ba','')
             print "==========="
             print data
             print "==========="
+            r = requests.post(url = send_data_url, data = data)
+            print r.text
