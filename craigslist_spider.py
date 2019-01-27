@@ -45,7 +45,7 @@ class CraiglistSpider(scrapy.Spider):
 
         # print all the locations that we found
         for location in craiglist_locations:
-            print location
+            print(location)
 
     def parse_location(self, response):
         #self.logger.info("Visiting %s", response.url)
@@ -77,12 +77,12 @@ class CraiglistSpider(scrapy.Spider):
                 data['bathrooms'] = shared_line_bubble_data.xpath('b/text()').extract()[1]
 
         # Now that we have the data, send it to the server
-        if not(len(data['rooms'] ) == 0 or len( data['bathrooms'] ) == 0):
+        if not(len( data['rooms'] ) == 0 or len( data['bathrooms'] ) == 0):
             data['price'] = data['price'].replace('$','')
             data['rooms'] = data['rooms'].replace('BR', '')
             data['bathrooms'] = data['bathrooms'].replace('Ba','')
-            print "==========="
-            print data
-            print "==========="
+            print("===========")
+            print(data)
+            print("===========")
             r = requests.post(url = send_data_url, data = data)
-            print r.text
+            print(r.text)
