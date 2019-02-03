@@ -65,8 +65,16 @@ class CraiglistSpider(scrapy.Spider):
 
     # Method for a specific post of real estate
     def parse_investment(self, response):
-        data = {'rooms': '', 'bathrooms': '', 'price': '', 'url': response.url, 'location': response.meta['place']}
-        # Get the price
+        data = {'rooms': '', 'description': '' ,'bathrooms': '', 'price': '', 'url': response.url, 'location': response.meta['place']}
+
+        # Get the description of the post
+        description = ""
+        for desc in response.css('#postingbody::text'):
+            description = description + " " + desc.extract().strip()
+
+        data['description'] = description
+
+        # Now get the price
         for price in response.css('.price'):
             data['price'] = price.xpath('text()').extract()[0]
 
